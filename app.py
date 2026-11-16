@@ -66,10 +66,10 @@ def openPDFtoDOCX():
     input_field.grid(row=0, column=0, padx=20, pady=20)
     input_field.config(state=tk.DISABLED)
 
-    select_pdf_file_button = Button(pdf_to_docx, text="Select PDF File", command=select_pdf_file)
+    select_pdf_file_button = Button(pdf_to_docx, text="Select PDF File", command=select_pdf_file, cursor="hand2")
     select_pdf_file_button.grid(row=0, column=1, padx=0, pady=20)
 
-    convert_to_docx_button = Button(pdf_to_docx, text="Convert To DOCX", command=convert_pdf_to_docx)
+    convert_to_docx_button = Button(pdf_to_docx, text="Convert To DOCX", command=convert_pdf_to_docx, cursor="hand2")
     convert_to_docx_button.grid(row=1, column=0, columnspan=2, pady=20)
 
     def on_window_close():
@@ -125,10 +125,10 @@ def openDOCXtoPDF():
     input_field.grid(row=0, column=0, padx=20, pady=20)
     input_field.config(state=tk.DISABLED)
 
-    select_docx_file_button = Button(docx_to_pdf, text="Select DOCX File", command=select_docx_file)
+    select_docx_file_button = Button(docx_to_pdf, text="Select DOCX File", command=select_docx_file, cursor="hand2")
     select_docx_file_button.grid(row=0, column=1, padx=0, pady=20)
 
-    convert_to_pdf_button = Button(docx_to_pdf, text="Convert To PDF", command=convert_docx_to_pdf)
+    convert_to_pdf_button = Button(docx_to_pdf, text="Convert To PDF", command=convert_docx_to_pdf, cursor="hand2")
     convert_to_pdf_button.grid(row=1, column=0, columnspan=2, pady=20)
 
     def on_window_close():
@@ -185,10 +185,10 @@ def openJPGtoPNG():
     input_field.grid(row=0, column=0, padx=20, pady=20)
     input_field.config(state=tk.DISABLED)
 
-    select_jpg_file_button = Button(jpg_to_png, text="Select JPG File", command=select_jpg_file)
+    select_jpg_file_button = Button(jpg_to_png, text="Select JPG File", command=select_jpg_file, cursor="hand2")
     select_jpg_file_button.grid(row=0, column=1, padx=0, pady=20)
 
-    convert_to_png_button = Button(jpg_to_png, text="Convert To PNG", command=convert_jpg_to_png)
+    convert_to_png_button = Button(jpg_to_png, text="Convert To PNG", command=convert_jpg_to_png, cursor="hand2")
     convert_to_png_button.grid(row=1, column=0, columnspan=2, pady=20)
 
     def on_window_close():
@@ -246,10 +246,10 @@ def openPNGtoJPG():
     input_field.grid(row=0, column=0, padx=20, pady=20)
     input_field.config(state=tk.DISABLED)
 
-    select_png_file_button = Button(png_to_jpg, text="Select PNG File", command=select_png_file)
+    select_png_file_button = Button(png_to_jpg, text="Select PNG File", command=select_png_file, cursor="hand2")
     select_png_file_button.grid(row=0, column=1, padx=0, pady=20)
 
-    convert_to_jpg_button = Button(png_to_jpg, text="Convert To JPG", command=convert_png_to_jpg)
+    convert_to_jpg_button = Button(png_to_jpg, text="Convert To JPG", command=convert_png_to_jpg, cursor="hand2")
     convert_to_jpg_button.grid(row=1, column=0, columnspan=2, pady=20)
 
     def on_window_close():
@@ -305,10 +305,10 @@ def openWEBPtoPNG():
     input_field.grid(row=0, column=0, padx=20, pady=20)
     input_field.config(state=tk.DISABLED)
 
-    select_webp_file_button = Button(webp_to_png, text="Select WEBP File", command=select_webp_file)
+    select_webp_file_button = Button(webp_to_png, text="Select WEBP File", command=select_webp_file, cursor="hand2")
     select_webp_file_button.grid(row=0, column=1, padx=0, pady=20)
 
-    convert_to_png_button = Button(webp_to_png, text="Convert To PNG", command=convert_webp_to_png)
+    convert_to_png_button = Button(webp_to_png, text="Convert To PNG", command=convert_webp_to_png, cursor="hand2")
     convert_to_png_button.grid(row=1, column=0, columnspan=2, pady=20)
 
     def on_window_close():
@@ -365,10 +365,10 @@ def openPNGtoWEBP():
     input_field.grid(row=0, column=0, padx=20, pady=20)
     input_field.config(state=tk.DISABLED)
 
-    select_png_file_button = Button(png_to_webp, text="Select PNG File", command=select_png_file)
+    select_png_file_button = Button(png_to_webp, text="Select PNG File", command=select_png_file, cursor="hand2")
     select_png_file_button.grid(row=0, column=1, padx=0, pady=20)
 
-    convert_to_webp_button = Button(png_to_webp, text="Convert To WEBP", command=convert_png_to_webp)
+    convert_to_webp_button = Button(png_to_webp, text="Convert To WEBP", command=convert_png_to_webp, cursor="hand2")
     convert_to_webp_button.grid(row=1, column=0, columnspan=2, pady=20)
 
     def on_window_close():
@@ -443,10 +443,10 @@ def mergePDF():
     add_pdf_button = Button(merge_pdf_window, text="Add PDF", command=add_pdf)
     add_pdf_button.pack(padx=0, pady=20)
 
-    remove_pdf_button = Button(merge_pdf_window, text="Remove Selected PDF", command=remove_selected_pdf)
+    remove_pdf_button = Button(merge_pdf_window, text="Remove Selected PDF", command=remove_selected_pdf, cursor="hand2")
     remove_pdf_button.pack(padx=0, pady=20)
 
-    merge_pdf_button = Button(merge_pdf_window, text="Merge PDFs", command=merge_pdfs)
+    merge_pdf_button = Button(merge_pdf_window, text="Merge PDFs", command=merge_pdfs, cursor="hand2")
     merge_pdf_button.pack(padx=0, pady=20)
 
     def on_window_close():
@@ -524,13 +524,13 @@ def splitPDF():
             except Exception as e:
                 messagebox.showerror("Error", f"An error occurred: {e}")
 
-    add_pdf_button = Button(split_pdf_window, text="Add PDF", command=add_pdf)
+    add_pdf_button = Button(split_pdf_window, text="Add PDF", command=add_pdf, cursor="hand2")
     add_pdf_button.pack(padx=0, pady=20)
 
-    remove_pdf_button = Button(split_pdf_window, text="Remove Selected PDF", command=remove_selected_pdf)
+    remove_pdf_button = Button(split_pdf_window, text="Remove Selected PDF", command=remove_selected_pdf, cursor="hand2")
     remove_pdf_button.pack(padx=0, pady=20)
 
-    split_pdf_button = Button(split_pdf_window, text="Split PDF", command=split_pdfs)
+    split_pdf_button = Button(split_pdf_window, text="Split PDF", command=split_pdfs, cursor="hand2")
     split_pdf_button.pack(padx=0, pady=20)
 
     def on_window_close():
@@ -541,28 +541,28 @@ def splitPDF():
 
 # button to select feature
 
-open_pdf_to_docx = Button(window, text="Convert PDF to DOCX", height=3, width=20, command=openPDFtoDOCX)
+open_pdf_to_docx = Button(window, text="Convert PDF to DOCX", height=3, width=20, command=openPDFtoDOCX, cursor="hand2")
 open_pdf_to_docx.grid(row=0, column=0, pady=10, padx=30)
 
-open_docx_to_pdf = Button(window, text="Convert DOCX to PDF", height=3, width=20, command=openDOCXtoPDF)
+open_docx_to_pdf = Button(window, text="Convert DOCX to PDF", height=3, width=20, command=openDOCXtoPDF, cursor="hand2")
 open_docx_to_pdf.grid(row=0, column=1, pady=10, padx=30)
 
-open_jpg_to_png = Button(window, text="Convert JPG to PNG", height=3, width=20, command=openJPGtoPNG)
+open_jpg_to_png = Button(window, text="Convert JPG to PNG", height=3, width=20, command=openJPGtoPNG, cursor="hand2")
 open_jpg_to_png.grid(row=1, column=0, pady=20, padx=30)
 
-open_png_to_jpg = Button(window, text="Convert PNG to JPG", height=3, width=20, command=openPNGtoJPG)
+open_png_to_jpg = Button(window, text="Convert PNG to JPG", height=3, width=20, command=openPNGtoJPG, cursor="hand2")
 open_png_to_jpg.grid(row=1, column=1, pady=20, padx=30)
 
-open_webp_to_png = Button(window, text="Convert WEBP to PNG", height=3, width=20, command=openWEBPtoPNG)
+open_webp_to_png = Button(window, text="Convert WEBP to PNG", height=3, width=20, command=openWEBPtoPNG, cursor="hand2")
 open_webp_to_png.grid(row=2, column=0, pady=20, padx=30)
 
-open_png_to_webp = Button(window, text="Convert PNG to WEBP", height=3, width=20, command=openPNGtoWEBP)
+open_png_to_webp = Button(window, text="Convert PNG to WEBP", height=3, width=20, command=openPNGtoWEBP, cursor="hand2")
 open_png_to_webp.grid(row=2, column=1, pady=20, padx=30)
 
-merge_pdf = Button(window, text="Merge PDF", height=3, width=20, command=mergePDF)
+merge_pdf = Button(window, text="Merge PDF", height=3, width=20, command=mergePDF, cursor="hand2")
 merge_pdf.grid(row=3, column=0, pady=20, padx=30)
 
-split_pdf = Button(window, text="Split PDF", height=3, width=20, command=splitPDF)
+split_pdf = Button(window, text="Split PDF", height=3, width=20, command=splitPDF, cursor="hand2")
 split_pdf.grid(row=3, column=1, pady=20, padx=30)
 
 window.mainloop()
