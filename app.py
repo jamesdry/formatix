@@ -18,7 +18,7 @@ class ConverterApp:
         self.setup_features()
 
     def setup_window(self):
-        self.root.title("ConvertMe")
+        self.root.title("Formatix")
         self.root.state("zoomed")
         self.root.resizable(False, False)
         self.root.configure(background="orange")
