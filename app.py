@@ -44,6 +44,7 @@ class ConverterApp:
             ("Convert PDF to DOCX", self.open_pdf_to_docx),
             ("Convert DOCX to PDF", self.open_docx_to_pdf),
             ("Convert PDF to JPG", self.open_pdf_to_jpg),
+            ("Convert PDF to PNG", self.open_pdf_to_png),
             ("Convert JPG to PNG", self.open_jpg_to_png),
             ("Convert PNG to JPG", self.open_png_to_jpg),
             ("Convert WEBP to PNG", self.open_webp_to_png),
@@ -163,6 +164,77 @@ class ConverterApp:
             "WM_DELETE_WINDOW", lambda: self.close_feature_window(window, button)
         )
 
+    def create_pdf_to_image_conversion_window(self, target_format, extension):
+        title = f"Convert PDF to {target_format}"
+        window, button = self.create_feature_window(title, title)
+
+        file_name_var = tk.StringVar()
+        file_path_var = tk.StringVar()
+
+        def select_pdf_file():
+            file_path = filedialog.askopenfilename(
+                filetypes=[("PDF Files", "*.pdf")],
+                title="Select a PDF File",
+                parent=window,
+            )
+            if file_path:
+                file_name_var.set(os.path.basename(file_path))
+                file_path_var.set(file_path)
+
+        def convert_pdf():
+            pdf_file_path = file_path_var.get()
+            if not pdf_file_path.lower().endswith(".pdf"):
+                messagebox.showerror("Error", "Please Select A Valid PDF File !")
+                return
+
+            base_name = os.path.splitext(os.path.basename(pdf_file_path))[0]
+            output_folder = os.path.join(
+                self.get_downloads_folder(), f"{base_name}_{extension}"
+            )
+
+            try:
+                os.makedirs(output_folder, exist_ok=True)
+                with fitz.open(pdf_file_path) as pdf_document:
+                    total_pages = len(pdf_document)
+                    for page_num in range(total_pages):
+                        page = pdf_document.load_page(page_num)
+                        pixmap = page.get_pixmap(dpi=200)
+                        output_path = os.path.join(
+                            output_folder,
+                            f"{base_name}_page_{page_num + 1}.{extension}",
+                        )
+                        pixmap.save(output_path)
+                messagebox.showinfo(
+                    "Success",
+                    f"PDF Successfully Converted to {target_format} !\n"
+                    f"Saved in: {output_folder}",
+                )
+            except Exception as error:
+                messagebox.showerror(
+                    "Error",
+                    f"Failed To Convert PDF To {target_format}.\nError: {error}",
+                )
+
+        input_field = tk.Entry(
+            window, textvariable=file_name_var, width=50, state=tk.DISABLED
+        )
+        input_field.grid(row=0, column=0, padx=20, pady=20)
+
+        tk.Button(
+            window, text="Select PDF File", command=select_pdf_file, cursor="hand2"
+        ).grid(row=0, column=1, padx=0, pady=20)
+
+        tk.Button(
+            window,
+            text=f"Convert To {target_format}",
+            command=convert_pdf,
+            cursor="hand2",
+        ).grid(row=1, column=0, columnspan=2, pady=20)
+
+        window.protocol(
+            "WM_DELETE_WINDOW", lambda: self.close_feature_window(window, button)
+        )
+
     def open_pdf_to_docx(self):
         def converter(pdf_file_path):
             output_filename = os.path.basename(pdf_file_path).replace(".pdf", ".docx")
@@ -198,71 +270,10 @@ class ConverterApp:
         )
 
     def open_pdf_to_jpg(self):
-        window, button = self.create_feature_window(
-            "Convert PDF to JPG", "Convert PDF to JPG"
-        )
+        self.create_pdf_to_image_conversion_window("JPG", "jpg")
 
-        file_name_var = tk.StringVar()
-        file_path_var = tk.StringVar()
-
-        def select_pdf_file():
-            file_path = filedialog.askopenfilename(
-                filetypes=[("PDF Files", "*.pdf")],
-                title="Select a PDF File",
-                parent=window,
-            )
-            if file_path:
-                file_name_var.set(os.path.basename(file_path))
-                file_path_var.set(file_path)
-
-        def convert_pdf_to_jpg():
-            pdf_file_path = file_path_var.get()
-            if not pdf_file_path.lower().endswith(".pdf"):
-                messagebox.showerror("Error", "Please Select A Valid PDF File !")
-                return
-
-            base_name = os.path.splitext(os.path.basename(pdf_file_path))[0]
-            output_folder = os.path.join(
-                self.get_downloads_folder(), f"{base_name}_jpg"
-            )
-
-            try:
-                os.makedirs(output_folder, exist_ok=True)
-                with fitz.open(pdf_file_path) as pdf_document:
-                    total_pages = len(pdf_document)
-                    for page_num in range(total_pages):
-                        page = pdf_document.load_page(page_num)
-                        pixmap = page.get_pixmap(dpi=200)
-                        output_path = os.path.join(
-                            output_folder, f"{base_name}_page_{page_num + 1}.jpg"
-                        )
-                        pixmap.save(output_path)
-                messagebox.showinfo(
-                    "Success",
-                    f"PDF Successfully Converted to JPG !\n"
-                    f"Saved in: {output_folder}",
-                )
-            except Exception as error:
-                messagebox.showerror(
-                    "Error", f"Failed To Convert PDF To JPG.\nError: {error}"
-                )
-
-        input_field = tk.Entry(
-            window, textvariable=file_name_var, width=50, state=tk.DISABLED
-        )
-        input_field.grid(row=0, column=0, padx=20, pady=20)
-
-        tk.Button(
-            window, text="Select PDF File", command=select_pdf_file, cursor="hand2"
-        ).grid(row=0, column=1, padx=0, pady=20)
-
-        tk.Button(
-            window, text="Convert To JPG", command=convert_pdf_to_jpg, cursor="hand2"
-        ).grid(row=1, column=0, columnspan=2, pady=20)
-
-        window.protocol(
-            "WM_DELETE_WINDOW", lambda: self.close_feature_window(window, button)
-        )
+    def open_pdf_to_png(self):
+        self.create_pdf_to_image_conversion_window("PNG", "png")
 
     def open_jpg_to_png(self):
         def converter(jpg_file_path):
