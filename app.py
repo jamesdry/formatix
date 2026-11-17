@@ -2,6 +2,7 @@ import os
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
+import fitz
 from PIL import Image
 from PyPDF2 import PdfMerger, PdfReader, PdfWriter
 from docx2pdf import convert
@@ -42,6 +43,7 @@ class ConverterApp:
         features = [
             ("Convert PDF to DOCX", self.open_pdf_to_docx),
             ("Convert DOCX to PDF", self.open_docx_to_pdf),
+            ("Convert PDF to JPG", self.open_pdf_to_jpg),
             ("Convert JPG to PNG", self.open_jpg_to_png),
             ("Convert PNG to JPG", self.open_png_to_jpg),
             ("Convert WEBP to PNG", self.open_webp_to_png),
@@ -88,9 +90,116 @@ class ConverterApp:
 
         return window, button
 
+    def close_feature_window(self, window, button):
+        button.config(state="normal")
+        window.destroy()
+
+    def get_downloads_folder(self):
+        folder = os.path.join(os.path.expanduser("~"), "Downloads")
+        os.makedirs(folder, exist_ok=True)
+        return folder
+
+    def create_single_file_conversion_window(
+        self, source_name, target_name, filetypes, valid_extensions, converter
+    ):
+        title = f"Convert {source_name} to {target_name}"
+        window, button = self.create_feature_window(title, title)
+
+        file_name_var = tk.StringVar()
+        file_path_var = tk.StringVar()
+
+        def select_file():
+            file_path = filedialog.askopenfilename(
+                filetypes=filetypes,
+                title=f"Select a {source_name} File",
+                parent=window,
+            )
+            if file_path:
+                file_name_var.set(os.path.basename(file_path))
+                file_path_var.set(file_path)
+
+        def run_conversion():
+            file_path = file_path_var.get()
+            if not file_path.lower().endswith(valid_extensions):
+                messagebox.showerror(
+                    "Error", f"Please Select A Valid {source_name} File !"
+                )
+                return
+
+            try:
+                output_path = converter(file_path)
+                messagebox.showinfo(
+                    "Success",
+                    f"{source_name} Successfully Converted to {target_name} File !\n"
+                    f"Saved As: {output_path}",
+                )
+            except Exception as error:
+                messagebox.showerror(
+                    "Error",
+                    f"Failed To Convert {source_name} To {target_name}.\n"
+                    f"Error: {error}",
+                )
+
+        input_field = tk.Entry(
+            window, textvariable=file_name_var, width=50, state=tk.DISABLED
+        )
+        input_field.grid(row=0, column=0, padx=20, pady=20)
+
+        tk.Button(
+            window,
+            text=f"Select {source_name} File",
+            command=select_file,
+            cursor="hand2",
+        ).grid(row=0, column=1, padx=0, pady=20)
+
+        tk.Button(
+            window,
+            text=f"Convert To {target_name}",
+            command=run_conversion,
+            cursor="hand2",
+        ).grid(row=1, column=0, columnspan=2, pady=20)
+
+        window.protocol(
+            "WM_DELETE_WINDOW", lambda: self.close_feature_window(window, button)
+        )
+
     def open_pdf_to_docx(self):
+        def converter(pdf_file_path):
+            output_filename = os.path.basename(pdf_file_path).replace(".pdf", ".docx")
+            docx_file = os.path.join(self.get_downloads_folder(), output_filename)
+            conv = Converter(pdf_file_path)
+            try:
+                conv.convert(docx_file, start=0, end=None)
+            finally:
+                conv.close()
+            return docx_file
+
+        self.create_single_file_conversion_window(
+            "PDF",
+            "DOCX",
+            [("PDF Files", "*.pdf")],
+            (".pdf",),
+            converter,
+        )
+
+    def open_docx_to_pdf(self):
+        def converter(docx_file_path):
+            output_filename = os.path.basename(docx_file_path).replace(".docx", ".pdf")
+            pdf_file = os.path.join(self.get_downloads_folder(), output_filename)
+            convert(docx_file_path, pdf_file)
+            return pdf_file
+
+        self.create_single_file_conversion_window(
+            "DOCX",
+            "PDF",
+            [("DOCX Files", "*.docx")],
+            (".docx",),
+            converter,
+        )
+
+    def open_pdf_to_jpg(self):
         window, button = self.create_feature_window(
-            "Convert PDF to DOCX", "Convert PDF to DOCX"
+            "Convert PDF to JPG", "Convert PDF to JPG"
         )
 
         file_name_var = tk.StringVar()
@@ -106,31 +215,41 @@ class ConverterApp:
                 file_name_var.set(os.path.basename(file_path))
                 file_path_var.set(file_path)
 
-        def convert_pdf_to_docx():
+        def convert_pdf_to_jpg():
             pdf_file_path = file_path_var.get()
             if not pdf_file_path.lower().endswith(".pdf"):
                 messagebox.showerror("Error", "Please Select A Valid PDF File !")
                 return
 
-            downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
-            output_filename = os.path.basename(pdf_file_path).replace(".pdf", ".docx")
-            docx_file = os.path.join(downloads_folder, output_filename)
+            base_name = os.path.splitext(os.path.basename(pdf_file_path))[0]
+            output_folder = os.path.join(
+                self.get_downloads_folder(), f"{base_name}_jpg"
+            )
 
             try:
-                converter = Converter(pdf_file_path)
-                converter.convert(docx_file, start=0, end=None)
-                converter.close()
+                os.makedirs(output_folder, exist_ok=True)
+                with fitz.open(pdf_file_path) as pdf_document:
+                    total_pages = len(pdf_document)
+                    for page_num in range(total_pages):
+                        page = pdf_document.load_page(page_num)
+                        pixmap = page.get_pixmap(dpi=200)
+                        output_path = os.path.join(
+                            output_folder, f"{base_name}_page_{page_num + 1}.jpg"
+                        )
+                        pixmap.save(output_path)
                 messagebox.showinfo(
                     "Success",
-                    f"PDF Successfully Converted to DOCX File !\nSaved As: {docx_file}",
+                    f"PDF Successfully Converted to JPG !\n"
+                    f"Saved in: {output_folder}",
                 )
             except Exception as error:
                 messagebox.showerror(
-                    "Error",
-                    f"Failed To Convert PDF To DOCX.\nError: {error}",
+                    "Error", f"Failed To Convert PDF To JPG.\nError: {error}"
                 )
 
-        input_field = tk.Entry(window, textvariable=file_name_var, width=50, state=tk.DISABLED)
+        input_field = tk.Entry(
+            window, textvariable=file_name_var, width=50, state=tk.DISABLED
+        )
         input_field.grid(row=0, column=0, padx=20, pady=20)
 
         tk.Button(
@@ -138,306 +257,81 @@ class ConverterApp:
         ).grid(row=0, column=1, padx=0, pady=20)
 
         tk.Button(
-            window, text="Convert To DOCX", command=convert_pdf_to_docx, cursor="hand2"
+            window, text="Convert To JPG", command=convert_pdf_to_jpg, cursor="hand2"
         ).grid(row=1, column=0, columnspan=2, pady=20)
 
-        def on_close():
-            button.config(state="normal")
-            window.destroy()
-
-        window.protocol("WM_DELETE_WINDOW", on_close)
-
-    def open_docx_to_pdf(self):
-        window, button = self.create_feature_window(
-            "Convert DOCX to PDF", "Convert DOCX to PDF"
+        window.protocol(
+            "WM_DELETE_WINDOW", lambda: self.close_feature_window(window, button)
         )
-
-        file_name_var = tk.StringVar()
-        file_path_var = tk.StringVar()
-
-        def select_docx_file():
-            file_path = filedialog.askopenfilename(
-                filetypes=[("DOCX Files", "*.docx")],
-                title="Select a DOCX File",
-                parent=window,
-            )
-            if file_path:
-                file_name_var.set(os.path.basename(file_path))
-                file_path_var.set(file_path)
-
-        def convert_docx_to_pdf():
-            docx_file_path = file_path_var.get()
-            if not docx_file_path.lower().endswith(".docx"):
-                messagebox.showerror("Error", "Please Select A Valid DOCX File !")
-                return
-
-            downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
-            output_filename = os.path.basename(docx_file_path).replace(".docx", ".pdf")
-            pdf_file = os.path.join(downloads_folder, output_filename)
-
-            try:
-                convert(docx_file_path, pdf_file)
-                messagebox.showinfo(
-                    "Success",
-                    f"DOCX Successfully Converted to PDF File !\nSaved As: {pdf_file}",
-                )
-            except Exception as error:
-                messagebox.showerror(
-                    "Error",
-                    f"Failed To Convert DOCX To PDF.\nError: {error}",
-                )
-
-        input_field = tk.Entry(window, textvariable=file_name_var, width=50, state=tk.DISABLED)
-        input_field.grid(row=0, column=0, padx=20, pady=20)
-
-        tk.Button(
-            window, text="Select DOCX File", command=select_docx_file, cursor="hand2"
-        ).grid(row=0, column=1, padx=0, pady=20)
-
-        tk.Button(
-            window, text="Convert To PDF", command=convert_docx_to_pdf, cursor="hand2"
-        ).grid(row=1, column=0, columnspan=2, pady=20)
-
-        def on_close():
-            button.config(state="normal")
-            window.destroy()
-
-        window.protocol("WM_DELETE_WINDOW", on_close)
 
     def open_jpg_to_png(self):
-        window, button = self.create_feature_window(
-            "Convert JPG to PNG", "Convert JPG to PNG"
-        )
-
-        file_name_var = tk.StringVar()
-        file_path_var = tk.StringVar()
-
-        def select_jpg_file():
-            file_path = filedialog.askopenfilename(
-                filetypes=[("JPG Files", "*.jpg"), ("JPEG Files", "*.jpeg")],
-                title="Select a JPG File",
-                parent=window,
-            )
-            if file_path:
-                file_name_var.set(os.path.basename(file_path))
-                file_path_var.set(file_path)
-
-        def convert_jpg_to_png():
-            jpg_file_path = file_path_var.get()
-            if not jpg_file_path.lower().endswith((".jpg", ".jpeg")):
-                messagebox.showerror("Error", "Please Select A Valid JPG File !")
-                return
-
-            downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
+        def converter(jpg_file_path):
             output_filename = (
-                os.path.basename(jpg_file_path).replace(".jpg", ".png").replace(".jpeg", ".png")
+                os.path.basename(jpg_file_path)
+                .replace(".jpg", ".png")
+                .replace(".jpeg", ".png")
             )
-            png_file = os.path.join(downloads_folder, output_filename)
+            png_file = os.path.join(self.get_downloads_folder(), output_filename)
+            image = Image.open(jpg_file_path)
+            image.save(png_file, "PNG")
+            return png_file
 
-            try:
-                image = Image.open(jpg_file_path)
-                image.save(png_file, "PNG")
-                messagebox.showinfo(
-                    "Success",
-                    f"JPG Successfully Converted to PNG File !\nSaved As: {png_file}",
-                )
-            except Exception as error:
-                messagebox.showerror(
-                    "Error",
-                    f"Failed To Convert JPG To PNG.\nError: {error}",
-                )
-
-        input_field = tk.Entry(window, textvariable=file_name_var, width=50, state=tk.DISABLED)
-        input_field.grid(row=0, column=0, padx=20, pady=20)
-
-        tk.Button(
-            window, text="Select JPG File", command=select_jpg_file, cursor="hand2"
-        ).grid(row=0, column=1, padx=0, pady=20)
-
-        tk.Button(
-            window, text="Convert To PNG", command=convert_jpg_to_png, cursor="hand2"
-        ).grid(row=1, column=0, columnspan=2, pady=20)
-
-        def on_close():
-            button.config(state="normal")
-            window.destroy()
-
-        window.protocol("WM_DELETE_WINDOW", on_close)
+        self.create_single_file_conversion_window(
+            "JPG",
+            "PNG",
+            [("JPG Files", "*.jpg"), ("JPEG Files", "*.jpeg")],
+            (".jpg", ".jpeg"),
+            converter,
+        )
 
     def open_png_to_jpg(self):
-        window, button = self.create_feature_window(
-            "Convert PNG to JPG", "Convert PNG to JPG"
-        )
-
-        file_name_var = tk.StringVar()
-        file_path_var = tk.StringVar()
-
-        def select_png_file():
-            file_path = filedialog.askopenfilename(
-                filetypes=[("PNG Files", "*.png")],
-                title="Select a PNG File",
-                parent=window,
-            )
-            if file_path:
-                file_name_var.set(os.path.basename(file_path))
-                file_path_var.set(file_path)
-
-        def convert_png_to_jpg():
-            png_file_path = file_path_var.get()
-            if not png_file_path.lower().endswith(".png"):
-                messagebox.showerror("Error", "Please Select A Valid PNG File!")
-                return
-
-            downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
+        def converter(png_file_path):
             output_filename = os.path.basename(png_file_path).replace(".png", ".jpg")
-            jpg_file = os.path.join(downloads_folder, output_filename)
+            jpg_file = os.path.join(self.get_downloads_folder(), output_filename)
+            image = Image.open(png_file_path)
+            rgb_image = image.convert("RGB")
+            rgb_image.save(jpg_file, "JPEG")
+            return jpg_file
 
-            try:
-                image = Image.open(png_file_path)
-                rgb_image = image.convert("RGB")
-                rgb_image.save(jpg_file, "JPEG")
-                messagebox.showinfo(
-                    "Success",
-                    f"PNG Successfully Converted to JPG File!\nSaved As: {jpg_file}",
-                )
-            except Exception as error:
-                messagebox.showerror(
-                    "Error",
-                    f"Failed To Convert PNG To JPG.\nError: {error}",
-                )
-
-        input_field = tk.Entry(window, textvariable=file_name_var, width=50, state=tk.DISABLED)
-        input_field.grid(row=0, column=0, padx=20, pady=20)
-
-        tk.Button(
-            window, text="Select PNG File", command=select_png_file, cursor="hand2"
-        ).grid(row=0, column=1, padx=0, pady=20)
-
-        tk.Button(
-            window, text="Convert To JPG", command=convert_png_to_jpg, cursor="hand2"
-        ).grid(row=1, column=0, columnspan=2, pady=20)
-
-        def on_close():
-            button.config(state="normal")
-            window.destroy()
-
-        window.protocol("WM_DELETE_WINDOW", on_close)
+        self.create_single_file_conversion_window(
+            "PNG",
+            "JPG",
+            [("PNG Files", "*.png")],
+            (".png",),
+            converter,
+        )
 
     def open_webp_to_png(self):
-        window, button = self.create_feature_window(
-            "Convert WEBP to PNG", "Convert WEBP to PNG"
-        )
-
-        file_name_var = tk.StringVar()
-        file_path_var = tk.StringVar()
-
-        def select_webp_file():
-            file_path = filedialog.askopenfilename(
-                filetypes=[("WEBP Files", "*.webp")],
-                title="Select a WEBP File",
-                parent=window,
-            )
-            if file_path:
-                file_name_var.set(os.path.basename(file_path))
-                file_path_var.set(file_path)
-
-        def convert_webp_to_png():
-            webp_file_path = file_path_var.get()
-            if not webp_file_path.lower().endswith(".webp"):
-                messagebox.showerror("Error", "Please Select A Valid WEBP File!")
-                return
-
-            downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
+        def converter(webp_file_path):
             output_filename = os.path.basename(webp_file_path).replace(".webp", ".png")
-            png_file = os.path.join(downloads_folder, output_filename)
+            png_file = os.path.join(self.get_downloads_folder(), output_filename)
+            image = Image.open(webp_file_path)
+            image.save(png_file, "PNG")
+            return png_file
 
-            try:
-                image = Image.open(webp_file_path)
-                image.save(png_file, "PNG")
-                messagebox.showinfo(
-                    "Success",
-                    f"WEBP Successfully Converted to PNG File!\nSaved As: {png_file}",
-                )
-            except Exception as error:
-                messagebox.showerror(
-                    "Error",
-                    f"Failed To Convert WEBP To PNG.\nError: {error}",
-                )
-
-        input_field = tk.Entry(window, textvariable=file_name_var, width=50, state=tk.DISABLED)
-        input_field.grid(row=0, column=0, padx=20, pady=20)
-
-        tk.Button(
-            window, text="Select WEBP File", command=select_webp_file, cursor="hand2"
-        ).grid(row=0, column=1, padx=0, pady=20)
-
-        tk.Button(
-            window, text="Convert To PNG", command=convert_webp_to_png, cursor="hand2"
-        ).grid(row=1, column=0, columnspan=2, pady=20)
-
-        def on_close():
-            button.config(state="normal")
-            window.destroy()
-
-        window.protocol("WM_DELETE_WINDOW", on_close)
+        self.create_single_file_conversion_window(
+            "WEBP",
+            "PNG",
+            [("WEBP Files", "*.webp")],
+            (".webp",),
+            converter,
+        )
 
     def open_png_to_webp(self):
-        window, button = self.create_feature_window(
-            "Convert PNG to WEBP", "Convert PNG to WEBP"
-        )
-
-        file_name_var = tk.StringVar()
-        file_path_var = tk.StringVar()
-
-        def select_png_file():
-            file_path = filedialog.askopenfilename(
-                filetypes=[("PNG Files", "*.png")],
-                title="Select a PNG File",
-                parent=window,
-            )
-            if file_path:
-                file_name_var.set(os.path.basename(file_path))
-                file_path_var.set(file_path)
-
-        def convert_png_to_webp():
-            png_file_path = file_path_var.get()
-            if not png_file_path.lower().endswith(".png"):
-                messagebox.showerror("Error", "Please Select A Valid PNG File!")
-                return
-
-            downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
+        def converter(png_file_path):
             output_filename = os.path.basename(png_file_path).replace(".png", ".webp")
-            webp_file = os.path.join(downloads_folder, output_filename)
+            webp_file = os.path.join(self.get_downloads_folder(), output_filename)
+            image = Image.open(png_file_path)
+            image.save(webp_file, "WEBP")
+            return webp_file
 
-            try:
-                image = Image.open(png_file_path)
-                image.save(webp_file, "WEBP")
-                messagebox.showinfo(
-                    "Success",
-                    f"PNG Successfully Converted to WEBP File!\nSaved As: {webp_file}",
-                )
-            except Exception as error:
-                messagebox.showerror(
-                    "Error",
-                    f"Failed To Convert PNG To WEBP.\nError: {error}",
-                )
-
-        input_field = tk.Entry(window, textvariable=file_name_var, width=50, state=tk.DISABLED)
-        input_field.grid(row=0, column=0, padx=20, pady=20)
-
-        tk.Button(
-            window, text="Select PNG File", command=select_png_file, cursor="hand2"
-        ).grid(row=0, column=1, padx=0, pady=20)
-
-        tk.Button(
-            window, text="Convert To WEBP", command=convert_png_to_webp, cursor="hand2"
-        ).grid(row=1, column=0, columnspan=2, pady=20)
-
-        def on_close():
-            button.config(state="normal")
-            window.destroy()
-
-        window.protocol("WM_DELETE_WINDOW", on_close)
+        self.create_single_file_conversion_window(
+            "PNG",
+            "WEBP",
+            [("PNG Files", "*.png")],
+            (".png",),
+            converter,
+        )
 
     def merge_pdf(self):
         window, button = self.create_feature_window(
@@ -517,11 +411,9 @@ class ConverterApp:
             window, text="Merge PDFs", command=merge_pdfs, cursor="hand2"
         ).pack(padx=0, pady=20)
 
-        def on_close():
-            button.config(state="normal")
-            window.destroy()
-
-        window.protocol("WM_DELETE_WINDOW", on_close)
+        window.protocol(
+            "WM_DELETE_WINDOW", lambda: self.close_feature_window(window, button)
+        )
 
     def split_pdf(self):
         window, button = self.create_feature_window(
@@ -576,7 +468,9 @@ class ConverterApp:
                     pdf_reader = PdfReader(file_path)
                     total_pages = len(pdf_reader.pages)
 
-                    output_folder = os.path.join(os.path.dirname(file_path), "Split PDFs")
+                    output_folder = os.path.join(
+                        os.path.dirname(file_path), "Split PDFs"
+                    )
                     os.makedirs(output_folder, exist_ok=True)
 
                     base_name = os.path.basename(file_path).replace(".pdf", "")
@@ -611,11 +505,9 @@ class ConverterApp:
             window, text="Split PDF", command=split_pdfs, cursor="hand2"
         ).pack(padx=0, pady=20)
 
-        def on_close():
-            button.config(state="normal")
-            window.destroy()
-
-        window.protocol("WM_DELETE_WINDOW", on_close)
+        window.protocol(
+            "WM_DELETE_WINDOW", lambda: self.close_feature_window(window, button)
+        )
 
 
 def main():
