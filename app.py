@@ -47,6 +47,7 @@ class ConverterApp:
             ("Convert PDF to PNG", self.open_pdf_to_png),
             ("Convert JPG to PNG", self.open_jpg_to_png),
             ("Convert PNG to JPG", self.open_png_to_jpg),
+            ("Convert JPG to WEBP", self.open_jpg_to_webp),
             ("Convert WEBP to PNG", self.open_webp_to_png),
             ("Convert PNG to WEBP", self.open_png_to_webp),
             ("Merge PDF", self.merge_pdf),
@@ -309,6 +310,26 @@ class ConverterApp:
             "JPG",
             [("PNG Files", "*.png")],
             (".png",),
+            converter,
+        )
+
+    def open_jpg_to_webp(self):
+        def converter(jpg_file_path):
+            output_filename = (
+                os.path.basename(jpg_file_path)
+                .replace(".jpg", ".webp")
+                .replace(".jpeg", ".webp")
+            )
+            webp_file = os.path.join(self.get_downloads_folder(), output_filename)
+            image = Image.open(jpg_file_path)
+            image.save(webp_file, "WEBP")
+            return webp_file
+
+        self.create_single_file_conversion_window(
+            "JPG",
+            "WEBP",
+            [("JPG Files", "*.jpg"), ("JPEG Files", "*.jpeg")],
+            (".jpg", ".jpeg"),
             converter,
         )
 
